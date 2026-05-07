@@ -1,0 +1,17 @@
+{
+  "name": "ai-onchain-intent-agent-protocol",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI-powered on-chain agent protocol MVP with intent batching and ERC-4337-inspired execution.",
+  "workspaces": [
+    "contracts",
+    "agent",
+    "bundler",
+    "dashboard",
+    "shared"
+  ],
+  "scripts": {
+    "test:contracts": "npm --workspace contracts test",
+    "compile:contracts": "npm --workspace contracts compile"
+  }
+}
