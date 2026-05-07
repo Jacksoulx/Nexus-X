@@ -11,7 +11,11 @@
     "shared"
   ],
   "scripts": {
-    "test:contracts": "npm --workspace contracts test",
-    "compile:contracts": "npm --workspace contracts compile"
+    "test:contracts": "npm --workspace contracts run test",
+    "compile:contracts": "npm --workspace contracts run compile",
+    "export:contracts": "npm --workspace shared run export:contracts",
+    "dev:agent": "npm --workspace agent run dev",
+    "dev:bundler": "npm --workspace bundler run dev",
+    "test:flow": "tsx test-flow.ts"
   }
 }

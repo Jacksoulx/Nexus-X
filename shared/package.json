@@ -1,0 +1,17 @@
+{
+  "name": "@ai-onchain-intent/shared",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Shared types and generated contract metadata for the AI On-Chain Intent Agent Protocol.",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "export:contracts": "tsx scripts/export-contracts.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.5.4"
+  }
+}
