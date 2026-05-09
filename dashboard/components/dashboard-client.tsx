@@ -3,6 +3,7 @@
 import axios from "axios";
 import {
   Activity,
+  Blocks,
   Bot,
   CheckCircle2,
   Cpu,
@@ -11,11 +12,14 @@ import {
   Gauge,
   Loader2,
   RadioTower,
+  RefreshCw,
   Send,
   ShieldCheck,
+  Wallet,
   Zap
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { createPublicClient, formatUnits, http, isAddress, type Address, type Hash } from "viem";
 import {
   Bar,
   BarChart,
@@ -59,8 +63,53 @@ interface DemoMetrics {
   };
 }
 
+interface LocalAccountBalance {
+  label: string;
+  role: string;
+  address: string;
+  balance: string;
+}
+
+interface LocalScanTransaction {
+  hash: string;
+  blockNumber: string;
+  from: string;
+  to: string;
+  gasUsed: string;
+  status: "success" | "reverted" | "pending";
+}
+
+interface LocalScanState {
+  status: "syncing" | "online" | "offline";
+  blockNumber: string;
+  chainId: string;
+  balances: LocalAccountBalance[];
+  transactions: LocalScanTransaction[];
+  error?: string;
+}
+
 const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:3001";
 const BUNDLER_URL = process.env.NEXT_PUBLIC_BUNDLER_URL ?? "http://localhost:3002";
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL ?? "http://127.0.0.1:8545";
+
+const localClient = createPublicClient({
+  transport: http(RPC_URL)
+});
+
+const demoScanAccounts = [
+  { label: "Demo User", role: "Source wallet", address: dashboardContracts.deployment?.demoUser },
+  { label: "Alice", role: "Recipient", address: "0x90F79bf6EB2c4f870365E785982E1f101E93b906" },
+  { label: "Bob", role: "Recipient", address: "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65" },
+  { label: "Carol", role: "Recipient", address: "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc" }
+];
+
+const initialLocalScanState: LocalScanState = {
+  status: "syncing",
+  blockNumber: "--",
+  chainId: "--",
+  balances: [],
+  transactions: []
+};
 
 const mockIntents: Intent[] = [
   {
@@ -108,6 +157,8 @@ export function DashboardClient() {
   });
   const [statusText, setStatusText] = useState("Demo data loaded. Submit an intent to call the local agent and bundler.");
   const [demoMetrics, setDemoMetrics] = useState<DemoMetrics | null>(null);
+  const [localScan, setLocalScan] = useState<LocalScanState>(initialLocalScanState);
+  const [scanRefreshNonce, setScanRefreshNonce] = useState(0);
 
   const intentCount = result.intents.length || 3;
   const seededSummary = demoMetrics?.summary;
@@ -153,6 +204,37 @@ export function DashboardClient() {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function syncLocalScan() {
+      setLocalScan((current) => ({ ...current, status: "syncing", error: undefined }));
+
+      try {
+        const snapshot = await loadLocalScan();
+        if (mounted) {
+          setLocalScan(snapshot);
+        }
+      } catch (error) {
+        if (mounted) {
+          setLocalScan((current) => ({
+            ...current,
+            status: "offline",
+            error: error instanceof Error ? error.message : "Unable to reach local chain RPC."
+          }));
+        }
+      }
+    }
+
+    void syncLocalScan();
+    const intervalId = window.setInterval(syncLocalScan, 5000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [scanRefreshNonce]);
+
   async function submitIntent() {
     setBusy(true);
     setFailed(false);
@@ -173,6 +255,7 @@ export function DashboardClient() {
       setResult({ intents, receipt, source: "backend" });
       setActiveStep("executed");
       setStatusText(`Executed ${receipt.intentCount} intent${receipt.intentCount === 1 ? "" : "s"} in one batched transaction.`);
+      setScanRefreshNonce((value) => value + 1);
     } catch (error) {
       setFailed(true);
       setResult({ intents: mockIntents, receipt: mockReceipt, source: "mock" });
@@ -299,18 +382,96 @@ export function DashboardClient() {
                   <Stat label="Gas" value={result.receipt.gasUsed} accent="green" />
                 </div>
                 <a
-                  href={`http://localhost:8545/tx/${result.receipt.transactionHash}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  href="#local-chain-scan"
                   className="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-circuit-cyan underline-offset-4 hover:underline"
                 >
-                  Local Explorer
+                  Local Chain Scan
                   <ExternalLink className="h-3.5 w-3.5" />
                 </a>
               </div>
             </div>
           </Panel>
         </section>
+
+        <Panel id="local-chain-scan" title="Local Chain Scan" icon={Blocks}>
+          <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+            <div className="grid gap-3">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <Stat label="RPC" value={scanStatusLabel(localScan.status)} accent={localScan.status === "online" ? "green" : "amber"} />
+                <Stat label="Chain ID" value={localScan.chainId} accent="cyan" />
+                <Stat label="Block" value={localScan.blockNumber} accent="green" />
+              </div>
+              <div className="flex flex-col gap-3 border border-circuit-line bg-black/25 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <div className="text-xs uppercase tracking-[0.16em] text-slate-500">Local RPC</div>
+                  <div className="mt-1 truncate font-mono text-xs text-circuit-cyan">{RPC_URL}</div>
+                  {localScan.error ? <div className="mt-2 text-xs text-circuit-amber">{localScan.error}</div> : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setScanRefreshNonce((value) => value + 1)}
+                  className="inline-flex h-10 items-center justify-center gap-2 border border-circuit-line px-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-200 transition hover:border-circuit-cyan hover:text-circuit-cyan"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${localScan.status === "syncing" ? "animate-spin" : ""}`} />
+                  Refresh
+                </button>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {localScan.balances.map((account) => (
+                  <div key={account.address} className="border border-circuit-line bg-black/20 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-white">{account.label}</div>
+                        <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">{account.role}</div>
+                      </div>
+                      <Wallet className="h-4 w-4 text-circuit-green" />
+                    </div>
+                    <div className="mt-3 text-xl font-semibold text-circuit-green">{account.balance} USDC</div>
+                    <div className="mt-2 truncate font-mono text-xs text-slate-500">{account.address}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="min-w-0 border border-circuit-line bg-black/25 p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.16em] text-slate-500">Recent Transactions</div>
+                  <div className="mt-1 text-sm text-slate-400">Latest Hardhat blocks with mined transactions</div>
+                </div>
+                <Database className="h-4 w-4 text-circuit-cyan" />
+              </div>
+              <div className="grid gap-2">
+                {localScan.transactions.length > 0 ? (
+                  localScan.transactions.map((transaction) => (
+                    <div key={transaction.hash} className="grid gap-2 border border-circuit-line bg-black/20 p-3 text-xs lg:grid-cols-[90px_1fr_90px] lg:items-center">
+                      <div>
+                        <div className="uppercase tracking-[0.14em] text-slate-500">Block</div>
+                        <div className="mt-1 font-semibold text-circuit-cyan">{transaction.blockNumber}</div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate font-mono text-circuit-cyan">{transaction.hash}</div>
+                        <div className="mt-1 truncate text-slate-500">
+                          {shortAddress(transaction.from)} {"->"} {shortAddress(transaction.to)}
+                        </div>
+                      </div>
+                      <div className="lg:text-right">
+                        <div className={transaction.status === "success" ? "text-circuit-green" : "text-circuit-amber"}>
+                          {transaction.status}
+                        </div>
+                        <div className="mt-1 text-slate-500">{transaction.gasUsed} gas</div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="border border-circuit-line bg-black/20 p-4 text-sm text-slate-500">
+                    No mined transactions found in the latest local blocks yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Panel>
 
         <Panel title="Scalability & Performance Metrics" icon={Gauge}>
           <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
@@ -412,6 +573,114 @@ function describeRequestError(error: unknown) {
   return "Local services are unavailable or returned an error.";
 }
 
+async function loadLocalScan(): Promise<LocalScanState> {
+  const deployment = dashboardContracts.deployment;
+  const tokenAddress = asAddress(deployment?.mockUSDC);
+
+  if (!deployment || !tokenAddress) {
+    throw new Error("No local MockUSDC deployment metadata is available.");
+  }
+
+  const [blockNumber, chainId] = await Promise.all([localClient.getBlockNumber(), localClient.getChainId()]);
+  const balances = await Promise.all(
+    demoScanAccounts.map(async (account) => {
+      const address = asAddress(account.address);
+      if (!address) {
+        return {
+          label: account.label,
+          role: account.role,
+          address: "unavailable",
+          balance: "--"
+        };
+      }
+
+      const balance = await localClient.readContract({
+        address: tokenAddress,
+        abi: dashboardContracts.abis.MockUSDC,
+        functionName: "balanceOf",
+        args: [address]
+      });
+
+      return {
+        label: account.label,
+        role: account.role,
+        address,
+        balance: formatTokenAmount(balance)
+      };
+    })
+  );
+
+  return {
+    status: "online",
+    blockNumber: blockNumber.toString(),
+    chainId: String(chainId),
+    balances,
+    transactions: await loadRecentTransactions(blockNumber)
+  };
+}
+
+async function loadRecentTransactions(latestBlockNumber: bigint): Promise<LocalScanTransaction[]> {
+  const lookback = Array.from({ length: 10 }, (_, index) => latestBlockNumber - BigInt(index)).filter(
+    (blockNumber) => blockNumber >= 0n
+  );
+  const blocks = await Promise.all(
+    lookback.map((blockNumber) => localClient.getBlock({ blockNumber, includeTransactions: true }))
+  );
+  const transactions = blocks.flatMap((block) =>
+    (block.transactions as Array<Hash | { hash: Hash; from?: string; to?: string | null }>).map((transaction) => ({
+      transaction,
+      blockNumber: block.number ?? 0n
+    }))
+  );
+
+  return Promise.all(
+    transactions.slice(0, 6).map(async ({ transaction, blockNumber }) => {
+      const hash = typeof transaction === "string" ? transaction : transaction.hash;
+      const receipt = await localClient.getTransactionReceipt({ hash });
+      const from = typeof transaction === "string" ? receipt.from : transaction.from ?? receipt.from;
+      const to = typeof transaction === "string" ? receipt.to : transaction.to ?? receipt.to;
+
+      return {
+        hash,
+        blockNumber: blockNumber.toString(),
+        from,
+        to: to ?? "contract creation",
+        gasUsed: receipt.gasUsed.toString(),
+        status: receipt.status
+      };
+    })
+  );
+}
+
+function asAddress(value: string | undefined): Address | null {
+  return value && isAddress(value) ? value : null;
+}
+
+function formatTokenAmount(value: unknown) {
+  if (typeof value !== "bigint") {
+    return "--";
+  }
+
+  const formatted = formatUnits(value, 6);
+  return formatted.replace(/\.0$/, "");
+}
+
+function scanStatusLabel(status: LocalScanState["status"]) {
+  return {
+    syncing: "Syncing",
+    online: "Online",
+    offline: "Offline"
+  }[status];
+}
+
+function shortAddress(value: string) {
+  if (value.length <= 14) {
+    return value;
+  }
+
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
 function isIntent(value: unknown): value is Intent {
   if (!value || typeof value !== "object") {
     return false;
@@ -444,16 +713,18 @@ function pause(ms: number) {
 }
 
 function Panel({
+  id,
   title,
   icon: Icon,
   children
 }: {
+  id?: string;
   title: string;
   icon: ComponentType<{ className?: string }>;
   children: ReactNode;
 }) {
   return (
-    <section className="border border-circuit-line bg-circuit-panel/95 p-4 shadow-neon sm:p-5">
+    <section id={id} className="scroll-mt-4 border border-circuit-line bg-circuit-panel/95 p-4 shadow-neon sm:p-5">
       <div className="mb-4 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center border border-circuit-cyan/50 bg-black/30 text-circuit-cyan">
           <Icon className="h-4 w-4" />
