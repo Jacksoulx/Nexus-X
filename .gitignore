@@ -9,3 +9,4 @@ typechain-types/
 .env
 .env.local
 *.log
+*.tsbuildinfo

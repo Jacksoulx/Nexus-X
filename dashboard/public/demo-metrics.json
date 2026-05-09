@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-05-09T02:48:02.111Z",
+  "network": "localhost",
+  "chainId": 31337,
+  "token": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+  "sequentialTransfers": [
+    {
+      "label": "Sequential single-intent execution 1",
+      "transactionHash": "0x3d32110b7dbc3896127816e993a7e9a699364f258615b91d022c7bef762bbf4c",
+      "blockNumber": 46,
+      "gasUsed": "61426",
+      "transferCount": 1
+    },
+    {
+      "label": "Sequential single-intent execution 2",
+      "transactionHash": "0xe52945f7bf0d9d61f8ff4541421a5b5662f20b44ba91577715ef5da1c0fc6e32",
+      "blockNumber": 47,
+      "gasUsed": "61438",
+      "transferCount": 1
+    },
+    {
+      "label": "Sequential single-intent execution 3",
+      "transactionHash": "0xc70664b1bc5c641665b370779ffffa1b5f2495d9456c34d00c11652d99dbc3bf",
+      "blockNumber": 48,
+      "gasUsed": "61426",
+      "transferCount": 1
+    },
+    {
+      "label": "Sequential single-intent execution 4",
+      "transactionHash": "0x5867ec63c1ecdccf348f32c2c851beb8cb72040516042b7701796a3b5d2048a2",
+      "blockNumber": 49,
+      "gasUsed": "61438",
+      "transferCount": 1
+    },
+    {
+      "label": "Sequential single-intent execution 5",
+      "transactionHash": "0xb28616225f7e56514fcbc6d6b7b64d62a1b9e69e58908100bfc939a3ca9bf622",
+      "blockNumber": 50,
+      "gasUsed": "61438",
+      "transferCount": 1
+    },
+    {
+      "label": "Sequential single-intent execution 6",
+      "transactionHash": "0x9027d1a72913bb361138501466cc918f2c6e4c2553283f46ece9ce6b9e9632f4",
+      "blockNumber": 51,
+      "gasUsed": "61438",
+      "transferCount": 1
+    },
+    {
+      "label": "Sequential single-intent execution 7",
+      "transactionHash": "0x40a9c285f9a6edeafc66962b58264343d2edcfac6579ce043c25d5bd8f5a4cd2",
+      "blockNumber": 52,
+      "gasUsed": "61426",
+      "transferCount": 1
+    },
+    {
+      "label": "Sequential single-intent execution 8",
+      "transactionHash": "0xd98a0c404dec2f7f002687cb54ff43d2d139daf27c86da2de4b673f7ad07e73a",
+      "blockNumber": 53,
+      "gasUsed": "61426",
+      "transferCount": 1
+    }
+  ],
+  "batchedExecutions": [
+    {
+      "label": "Nexus-X batch 1",
+      "transactionHash": "0xff57b5e19f8ac79b2dc25be45ce69e732a1e287e5bbdef6f17b7f3b8fae7441c",
+      "blockNumber": 54,
+      "gasUsed": "92772",
+      "transferCount": 3
+    },
+    {
+      "label": "Nexus-X batch 2",
+      "transactionHash": "0xb9f6fe7390322b362c422a121647e644f1f75029314fa8e362dcf4d49cd952b7",
+      "blockNumber": 55,
+      "gasUsed": "92796",
+      "transferCount": 3
+    },
+    {
+      "label": "Nexus-X batch 3",
+      "transactionHash": "0x7f3981c5d81523d052f0d9f326c3ce4d5151857ae2eae3f423614faf7df19502",
+      "blockNumber": 56,
+      "gasUsed": "77117",
+      "transferCount": 2
+    }
+  ],
+  "summary": {
+    "sequentialTransferCount": 8,
+    "batchedTransferCount": 8,
+    "totalSequentialGas": "491456",
+    "totalBatchedGas": "262685",
+    "averageSequentialGas": "61432",
+    "averageBatchedGasPerTransfer": "32835",
+    "gasSavedPercent": 46.55
+  }
+}

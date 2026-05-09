@@ -16,6 +16,9 @@
     "export:contracts": "npm --workspace shared run export:contracts",
     "dev:agent": "npm --workspace agent run dev",
     "dev:bundler": "npm --workspace bundler run dev",
+    "dev:dashboard": "npm --workspace dashboard run dev",
+    "build:dashboard": "npm --workspace dashboard run build",
+    "demo:seed": "tsx scripts/demo-seed.ts",
     "test:flow": "tsx test-flow.ts"
   }
 }

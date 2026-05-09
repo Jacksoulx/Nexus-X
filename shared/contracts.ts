@@ -4,13 +4,13 @@ export const contractMetadata: ExportedContractMetadata = {
   "deployment": {
     "network": "localhost",
     "chainId": 31337,
-    "deployedAt": "2026-05-07T07:37:12.110Z",
+    "deployedAt": "2026-05-09T02:39:51.474Z",
     "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
     "authorizedAgent": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
     "demoUser": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
-    "agentRegistry": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c",
-    "intentBatcher": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
-    "mockUSDC": "0x59b670e9fA9D0A427751Af201D676719a970857b"
+    "agentRegistry": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "intentBatcher": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "mockUSDC": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
   },
   "abis": {
     "AgentRegistry": [
