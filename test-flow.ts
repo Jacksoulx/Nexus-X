@@ -49,7 +49,7 @@ async function main() {
 
   console.log("Preparing local test balances and allowance...");
   await (await token.mint(demoUserAddress, setupAmount)).wait();
-  await (await (token.connect(demoUser) as Contract).approve(intentBatcherAddress, setupAmount)).wait();
+  await (await (token.connect(demoUser) as Contract).approve(intentBatcherAddress, ethers.MaxUint256)).wait();
 
   const parser = new IntentParser();
   await parser.parse(

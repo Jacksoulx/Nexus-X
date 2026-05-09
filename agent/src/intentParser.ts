@@ -82,7 +82,11 @@ export class IntentParser {
   }
 
   private parseWithFallback(text: string): Intent[] {
-    const normalized = text.replace(/\band then\b/gi, ".").replace(/\s+/g, " ");
+    const decimalMarker = "__DECIMAL_POINT__";
+    const normalized = text
+      .replace(/(\d)\.(\d)/g, `$1${decimalMarker}$2`)
+      .replace(/\band then\b/gi, ".")
+      .replace(/\s+/g, " ");
     const parts = normalized
       .split(/[.\n;]+/g)
       .flatMap((segment) => segment.split(/\s+\band\b\s+/i))
@@ -91,9 +95,12 @@ export class IntentParser {
     const candidates = parts.length > 0 ? parts : [text];
 
     return candidates.map((candidate) => {
-      const match = candidate.match(/\bsend\s+([0-9]+(?:\.[0-9]+)?)\s+([a-zA-Z][a-zA-Z0-9]*)\s+to\s+(.+?)\.?$/i);
+      const restoredCandidate = candidate.replaceAll(decimalMarker, ".");
+      const match = restoredCandidate.match(
+        /\bsend\s+([0-9]+(?:\.[0-9]+)?)\s+([a-zA-Z][a-zA-Z0-9]*)\s+to\s+(.+?)\.?$/i
+      );
       if (!match) {
-        throw new Error(`Could not parse transfer intent: ${candidate}`);
+        throw new Error(`Could not parse transfer intent: ${restoredCandidate}`);
       }
 
       return {

@@ -49,3 +49,8 @@ export class AliasMemory {
 }
 
 export const defaultAliasMemory = new AliasMemory();
+
+// Stable Hardhat demo aliases used by the dashboard's default prompt.
+defaultAliasMemory.remember("Alice", "0x90F79bf6EB2c4f870365E785982E1f101E93b906");
+defaultAliasMemory.remember("Bob", "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65");
+defaultAliasMemory.remember("Carol", "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc");

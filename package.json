@@ -19,6 +19,7 @@
     "dev:dashboard": "npm --workspace dashboard run dev",
     "build:dashboard": "npm --workspace dashboard run build",
     "demo:seed": "tsx scripts/demo-seed.ts",
-    "test:flow": "tsx test-flow.ts"
+    "test:flow": "tsx test-flow.ts",
+    "test:qa-agent": "tsx scripts/qa-agent-boundary-tests.ts"
   }
 }

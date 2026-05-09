@@ -173,11 +173,11 @@ export function DashboardClient() {
       setResult({ intents, receipt, source: "backend" });
       setActiveStep("executed");
       setStatusText(`Executed ${receipt.intentCount} intent${receipt.intentCount === 1 ? "" : "s"} in one batched transaction.`);
-    } catch {
+    } catch (error) {
       setFailed(true);
       setResult({ intents: mockIntents, receipt: mockReceipt, source: "mock" });
       setActiveStep("executed");
-      setStatusText("Local services are unavailable or returned an error. Showing presentation-ready mock data.");
+      setStatusText(`${describeRequestError(error)} Showing presentation-ready mock data.`);
     } finally {
       setBusy(false);
     }
@@ -391,6 +391,25 @@ function normalizeBundlerResponse(data: unknown): BatchReceipt {
   }
 
   return receipt;
+}
+
+function describeRequestError(error: unknown) {
+  if (axios.isAxiosError(error)) {
+    const responseError = error.response?.data;
+    if (responseError && typeof responseError === "object" && "error" in responseError) {
+      return `Local service error: ${String(responseError.error)}.`;
+    }
+
+    if (error.code === "ERR_NETWORK") {
+      return "Local services are unreachable from this dashboard origin.";
+    }
+
+    if (error.code === "ECONNABORTED") {
+      return "Local service request timed out.";
+    }
+  }
+
+  return "Local services are unavailable or returned an error.";
 }
 
 function isIntent(value: unknown): value is Intent {

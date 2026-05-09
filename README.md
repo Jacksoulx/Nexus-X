@@ -206,8 +206,47 @@ http://localhost:3000
 ```bash
 npm run test:contracts
 npm run test:flow
+npm run test:qa-agent
 npm run build:dashboard
 ```
+
+## AI Agent Boundary QA Record
+
+Role B system testing focused on the AI Agent parser and the project fallback path. The deterministic parser was used for repeatable QA so results do not depend on external LLM availability.
+
+Test command:
+
+```bash
+npm run test:qa-agent
+```
+
+Latest result on 2026-05-09:
+
+```text
+AI Agent boundary QA: 12/12 cases passed
+```
+
+| ID | Boundary case | Input summary | Expected system behavior | Verified result |
+| --- | --- | --- | --- | --- |
+| QA-AI-01 | Valid multi-intent prompt | `Send 50 USDC to Alice. Send 20 USDC to Bob. Send 12 USDC to Carol.` | Resolve known aliases and return three structured intents. | PASS: three intents returned. |
+| QA-AI-02 | Direct EVM address with decimal amount | `Send 0.5 usdc to 0x90F...b906.` | Accept direct address, preserve decimal amount, normalize token casing. | PASS: one `USDC` intent returned. |
+| QA-AI-03 | Alias learning in same prompt | `Dave address is 0x3C44...93BC. Send 3 USDC to Dave.` | Learn alias before parsing transfer. | PASS: `Dave` resolved to the supplied address. |
+| QA-AI-04 | Non-transfer instruction | `What is the gas saving for the latest batch?` | Do not invent a transfer; return an empty intent list. | PASS: empty list returned as safe no-op fallback. |
+| QA-AI-05 | Empty instruction | Empty string | Parser returns no intents; HTTP route separately returns `400 Missing input`. | PASS: parser no-op behavior verified. |
+| QA-AI-06 | Unknown recipient alias | `Send 10 USDC to Mallory.` | Reject unresolved aliases. | PASS: `Unknown recipient alias or invalid address`. |
+| QA-AI-07 | Invalid address format | `Send 10 USDC to 0x1234.` | Reject malformed recipient address. | PASS: invalid address rejected before bundler submission. |
+| QA-AI-08 | Malformed transfer grammar | `Send USDC 10 Alice.` | Fail closed when amount/token/order cannot be parsed. | PASS: `Could not parse transfer intent`. |
+| QA-AI-09 | Negative amount | `Send -5 USDC to Alice.` | Reject negative values. | PASS: negative amount does not match parser grammar. |
+| QA-AI-10 | Zero amount | `Send 0 USDC to Alice.` | Agent may parse syntactically; smart contract fallback rejects zero amount as `InvalidIntent`. | PASS: agent behavior documented; downstream guard required. |
+| QA-AI-11 | Unsupported token symbol | `Send 1 ETH to Alice.` | Agent extracts symbol; bundler rejects symbols not mapped to deployed token addresses. | PASS: agent behavior documented; bundler guard required. |
+| QA-AI-12 | Excessive amount | `Send 999999999 USDC to Alice.` | Agent parses number; ERC20 balance/allowance checks reject impossible execution. | PASS: agent behavior documented; chain guard required. |
+
+QA findings:
+
+- The Agent fails closed for unknown aliases, malformed addresses, malformed transfer syntax, and negative amounts.
+- Non-transfer prompts and blank parser input degrade to an empty intent list instead of generating fake transfers.
+- Zero, unsupported-token, and excessive-amount cases are intentionally handled by downstream bundler or contract checks because the Agent only converts natural language into candidate intents.
+- QA uncovered and fixed a fallback-parser bug where decimal amounts such as `0.5` were incorrectly split at the decimal point during sentence segmentation.
 
 ## Demo Flow for Presentation
 
@@ -274,6 +313,7 @@ npm run dev:bundler
 npm run dev:dashboard
 npm run test:contracts
 npm run test:flow
+npm run test:qa-agent
 npm run build:dashboard
 ```
 

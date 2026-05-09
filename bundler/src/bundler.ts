@@ -57,7 +57,9 @@ export class IntentBundler {
     });
 
     if (this.queue.length >= this.batchSize) {
-      void this.submitBatch();
+      void this.submitBatch().catch((error) => {
+        console.error("Batch submission failed:", error);
+      });
     } else {
       this.armTimer();
     }

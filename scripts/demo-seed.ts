@@ -130,7 +130,7 @@ async function main() {
   }
 
   console.log("Approving IntentBatcher for demo workload...");
-  await waitForReceipt(await userToken.approve(deployment.intentBatcher, fundingAmount));
+  await waitForReceipt(await userToken.approve(deployment.intentBatcher, ethers.MaxUint256));
 
   console.log("Executing sequential single-intent workload...");
   const sequentialAmounts = ["4", "7", "3", "9", "5", "6", "8", "2"];
