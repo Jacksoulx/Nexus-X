@@ -8,8 +8,11 @@ const config: Config = {
         circuit: {
           bg: "#070A0F",
           panel: "#0D121C",
+          panel2: "#101827",
           line: "#243041",
           cyan: "#2DE2E6",
+          blue: "#4D7CFF",
+          violet: "#A855F7",
           green: "#72F2A1",
           amber: "#F6C453",
           rose: "#FF4D8D"
@@ -17,7 +20,9 @@ const config: Config = {
       },
       boxShadow: {
         neon: "0 0 30px rgba(45, 226, 230, 0.18)",
-        green: "0 0 24px rgba(114, 242, 161, 0.16)"
+        green: "0 0 24px rgba(114, 242, 161, 0.16)",
+        violet: "0 0 34px rgba(168, 85, 247, 0.18)",
+        data: "0 18px 70px rgba(0, 0, 0, 0.36)"
       }
     }
   },

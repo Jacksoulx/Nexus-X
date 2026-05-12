@@ -1,85 +1,85 @@
 {
-  "generatedAt": "2026-05-09T06:33:08.812Z",
+  "generatedAt": "2026-05-12T06:11:59.344Z",
   "network": "localhost",
   "chainId": 31337,
-  "token": "0x9E545E3C0baAB3E08CdfD552C960A1050f373042",
+  "token": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
   "sequentialTransfers": [
     {
       "label": "Sequential single-intent execution 1",
-      "transactionHash": "0xbac77066a0e109d3254a54e401fca122cf31078f6b3a1174bca988b8560d8972",
-      "blockNumber": 114,
+      "transactionHash": "0x6ac116a8f237680625b6e7f45339b0a59bf1d8a27ec62c86bef3ca5c3924230b",
+      "blockNumber": 12,
       "gasUsed": "58187",
       "transferCount": 1
     },
     {
       "label": "Sequential single-intent execution 2",
-      "transactionHash": "0x537db1e4ba9e0d2b081302b83738f30db63925898cd8d9f1f718cbf306ec144a",
-      "blockNumber": 115,
+      "transactionHash": "0xaa698d4cab3cd73932830e73563274d9757e2617a955184c617555989b1969c1",
+      "blockNumber": 13,
       "gasUsed": "58199",
       "transferCount": 1
     },
     {
       "label": "Sequential single-intent execution 3",
-      "transactionHash": "0x0a0bf88f28d7ca0947ab2082e1298a92883e3821f8cef23196be98fddb29c646",
-      "blockNumber": 116,
+      "transactionHash": "0x0addddc6279a19380ad7c19046038666a9c0cbd5027da1d9706be5b0eb350407",
+      "blockNumber": 14,
       "gasUsed": "58187",
       "transferCount": 1
     },
     {
       "label": "Sequential single-intent execution 4",
-      "transactionHash": "0x12aa0531703b235b7cf01f35420b9cfb7b6c04a482472265b7eb73bda0fe0dc6",
-      "blockNumber": 117,
+      "transactionHash": "0x39f673c6a8bc5e5bbe3cd97932b199d84fb57b0b6337a026e65ec9c1ab2c98da",
+      "blockNumber": 15,
       "gasUsed": "58199",
       "transferCount": 1
     },
     {
       "label": "Sequential single-intent execution 5",
-      "transactionHash": "0x0f0bb5807feeab5290c617406c3d7b0191c152419a6e16efd81149ce4d89988e",
-      "blockNumber": 118,
+      "transactionHash": "0xb34579e602072e2623916e2f6d8560abddd4a14d011591cf4134f535f7c92089",
+      "blockNumber": 16,
       "gasUsed": "58199",
       "transferCount": 1
     },
     {
       "label": "Sequential single-intent execution 6",
-      "transactionHash": "0xac73b5fc1b7f34a783208dc20312e3a0791c4e66f47f301cd328d8db08dd8054",
-      "blockNumber": 119,
-      "gasUsed": "58199",
+      "transactionHash": "0xc60d1555889ffe90d20dd749da0b2be577414dc1d1b36a36317675b88b42384d",
+      "blockNumber": 17,
+      "gasUsed": "75299",
       "transferCount": 1
     },
     {
       "label": "Sequential single-intent execution 7",
-      "transactionHash": "0x8bb3e84a96b18751e60089376e89d10b843efe9505139b381e840cdfd8961969",
-      "blockNumber": 120,
-      "gasUsed": "58187",
+      "transactionHash": "0x60fa61e7c9bf1ef4e0da9ef4a66fe1a79acb8ce55d552a47dc32c9379a0ec407",
+      "blockNumber": 18,
+      "gasUsed": "75287",
       "transferCount": 1
     },
     {
       "label": "Sequential single-intent execution 8",
-      "transactionHash": "0x70b3f9cd30e6d269d257603d5a7edb517c02635f4b5acafa62e11c37a4f847a7",
-      "blockNumber": 121,
-      "gasUsed": "58187",
+      "transactionHash": "0x57b4bbc359f0fc3ab92d6635d04d095c8b0c0463f952d91437a23adb232dda44",
+      "blockNumber": 19,
+      "gasUsed": "75287",
       "transferCount": 1
     }
   ],
   "batchedExecutions": [
     {
       "label": "Nexus-X batch 1",
-      "transactionHash": "0xd2ac7b9f179aaaa46cbc8eada0e223de6f11948e5e7620ade26ae9576937f1d8",
-      "blockNumber": 122,
+      "transactionHash": "0xd75b38f28385ec4d1d01b9f1e3beecc7295a4d8c76131caeeb5736fad6355187",
+      "blockNumber": 20,
       "gasUsed": "88655",
       "transferCount": 3
     },
     {
       "label": "Nexus-X batch 2",
-      "transactionHash": "0x429218a89263787d8fd5ab05120da22e17d0dbc55d10acb91f5d2b091a3ab764",
-      "blockNumber": 123,
+      "transactionHash": "0x29a55157af382a5a89c6f2020c019c5615b2d9d2b23e1211f09fb3643408f8f0",
+      "blockNumber": 21,
       "gasUsed": "88679",
       "transferCount": 3
     },
     {
       "label": "Nexus-X batch 3",
-      "transactionHash": "0xcd1cf80caeb5e6339ed54015a615816248298e2048c56bae766d4cbfe9c88886",
-      "blockNumber": 124,
+      "transactionHash": "0xadff988c60e95a1be789442d2a7f3edd54b556c9f524b0903fd98b24af5906fe",
+      "blockNumber": 22,
       "gasUsed": "73439",
       "transferCount": 2
     }
@@ -87,10 +87,10 @@
   "summary": {
     "sequentialTransferCount": 8,
     "batchedTransferCount": 8,
-    "totalSequentialGas": "465544",
+    "totalSequentialGas": "516844",
     "totalBatchedGas": "250773",
-    "averageSequentialGas": "58193",
+    "averageSequentialGas": "64605",
     "averageBatchedGasPerTransfer": "31346",
-    "gasSavedPercent": 46.13
+    "gasSavedPercent": 51.48
   }
 }

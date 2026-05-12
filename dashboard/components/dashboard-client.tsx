@@ -25,6 +25,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -144,6 +145,7 @@ const tracker: Array<{ id: TrackerStep; label: string; caption: string; icon: Co
 ];
 
 const sequentialGasPerIntent = 92000;
+const chartGridColor = "rgba(142, 164, 199, 0.12)";
 
 export function DashboardClient() {
   const [input, setInput] = useState("Send 50 USDC to Alice. Send 20 USDC to Bob. Send 12 USDC to Carol.");
@@ -170,12 +172,28 @@ export function DashboardClient() {
     ? seededSummary.gasSavedPercent
     : Math.max(0, Math.round(((sequentialGas - batchedGas) / sequentialGas) * 100));
   const gasSavedLabel = `${Number.isInteger(gasSaved) ? gasSaved : gasSaved.toFixed(2)}%`;
+  const gasSavedAbsolute = Math.max(0, sequentialGas - batchedGas);
+  const batchedShare = sequentialGas > 0 ? Math.max(0, Math.min(100, (batchedGas / sequentialGas) * 100)) : 0;
+  const savedShare = Math.max(0, Math.min(100, 100 - batchedShare));
+  const maxChartGas = Math.max(sequentialGas, batchedGas);
   const chartData = useMemo(
     () => [
-      { mode: seededSummary ? "Sequential Workload" : "Sequential", gas: sequentialGas, fill: "#FF4D8D" },
-      { mode: seededSummary ? "Nexus-X Batches" : "Nexus-X Batch", gas: batchedGas, fill: "#72F2A1" }
+      {
+        mode: seededSummary ? "Sequential\nWorkload" : "Sequential",
+        gas: sequentialGas,
+        label: sequentialGas.toLocaleString(),
+        delta: 0,
+        fill: "url(#sequentialGasGradient)"
+      },
+      {
+        mode: seededSummary ? "Nexus-X\nBatches" : "Nexus-X Batch",
+        gas: batchedGas,
+        label: batchedGas.toLocaleString(),
+        delta: gasSavedAbsolute,
+        fill: "url(#batchedGasGradient)"
+      }
     ],
-    [batchedGas, seededSummary, sequentialGas]
+    [batchedGas, gasSavedAbsolute, seededSummary, sequentialGas]
   );
 
   useEffect(() => {
@@ -286,54 +304,72 @@ export function DashboardClient() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
+    <main className="relative min-h-screen overflow-hidden px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
-        <header className="flex flex-col gap-4 border-b border-circuit-line/80 pb-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="mb-2 inline-flex items-center gap-2 border border-circuit-cyan/40 bg-circuit-panel px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-circuit-cyan">
-              <Activity className="h-3.5 w-3.5" />
-              Nexus Execution Network
+        <header className="relative overflow-hidden border border-circuit-cyan/25 bg-[linear-gradient(135deg,rgba(16,24,39,0.96),rgba(5,10,22,0.92)_54%,rgba(17,24,39,0.86))] p-5 shadow-data backdrop-blur lg:p-6">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_0_58%,rgba(45,226,230,0.08)_58%_59%,transparent_59%),linear-gradient(245deg,rgba(168,85,247,0.13),transparent_42%)]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-circuit-cyan to-transparent" />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 border border-circuit-cyan/40 bg-circuit-cyan/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-circuit-cyan shadow-neon">
+                <Activity className="h-3.5 w-3.5" />
+                Nexus Execution Network
+              </div>
+              <h1 className="text-4xl font-semibold text-white sm:text-5xl">Nexus-X</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
+                AI parsed intents, relayed through a local bundler, and measured against direct sequential execution.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <EndpointPill label="Agent" value={AGENT_URL} tone="cyan" />
+                <EndpointPill label="Bundler" value={BUNDLER_URL} tone="violet" />
+                <EndpointPill label="RPC" value={RPC_URL} tone="green" />
+              </div>
             </div>
-            <h1 className="text-3xl font-semibold text-white sm:text-4xl">Nexus-X</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-              AI parsed intents, relayed through a local bundler, and measured against direct sequential execution.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
-            <Stat label="Mode" value={result.source === "backend" ? "Live" : "Demo"} accent="cyan" />
-            <Stat label="Intents" value={String(intentCount)} accent="green" />
-            <Stat label="Gas Saved" value={gasSavedLabel} accent="amber" />
+            <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3 lg:min-w-[420px]">
+              <Stat label="Mode" value={result.source === "backend" ? "Live" : "Demo"} accent="cyan" />
+              <Stat label="Intents" value={String(intentCount)} accent="green" />
+              <Stat label="Gas Saved" value={gasSavedLabel} accent="amber" />
+            </div>
           </div>
         </header>
 
         <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
           <Panel title="Intent Console" icon={Cpu}>
             <div className="flex h-full flex-col gap-4">
-              <div className="border border-circuit-line bg-black/25 p-3">
-                <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-slate-500">
-                  <Bot className="h-3.5 w-3.5 text-circuit-cyan" />
-                  AI Operator
+              <div className="border border-circuit-cyan/20 bg-[linear-gradient(135deg,rgba(45,226,230,0.08),rgba(2,6,23,0.32))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-circuit-cyan">
+                    <Bot className="h-3.5 w-3.5" />
+                    AI Operator
+                  </div>
+                  <StatusDot status={busy ? "active" : "ready"} label={busy ? "Processing" : "Ready"} />
                 </div>
                 <p className="text-sm leading-6 text-slate-300">
                   Convert this transfer request into token intents, then send the batch to the relayer.
                 </p>
               </div>
-              <textarea
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                aria-label="Natural language intent input"
-                className="min-h-40 resize-none border border-circuit-line bg-black/30 p-4 text-sm leading-6 text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-circuit-cyan focus:shadow-neon"
-                placeholder="Send 50 USDC to Alice and 20 USDC to Bob"
-              />
+              <div className="overflow-hidden border border-circuit-line bg-slate-950/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="flex items-center justify-between border-b border-circuit-line bg-black/30 px-4 py-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-slate-500">intent.input</span>
+                  <span className="font-mono text-[11px] text-circuit-cyan">natural-language</span>
+                </div>
+                <textarea
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  aria-label="Natural language intent input"
+                  className="min-h-40 w-full resize-none bg-transparent p-4 font-mono text-sm leading-6 text-slate-100 outline-none transition placeholder:text-slate-600 focus:shadow-[inset_0_0_0_1px_rgba(45,226,230,0.55)]"
+                  placeholder="Send 50 USDC to Alice and 20 USDC to Bob"
+                />
+              </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-xs text-slate-500">
+                <div className="border border-circuit-line bg-black/25 px-3 py-2 text-xs text-slate-500">
                   Contract sync: {dashboardContracts.hasLocalDeployment ? "local deployment loaded" : "ABI only"}
                 </div>
                 <button
                   type="button"
                   onClick={submitIntent}
                   disabled={busy || !input.trim()}
-                  className="inline-flex h-11 items-center justify-center gap-2 border border-circuit-cyan bg-circuit-cyan px-4 text-sm font-semibold text-black transition hover:bg-white disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500"
+                  className="inline-flex h-11 items-center justify-center gap-2 border border-circuit-cyan bg-[linear-gradient(135deg,#2DE2E6,#72F2A1)] px-4 text-sm font-semibold text-black shadow-neon transition hover:border-white hover:brightness-110 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-none disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   {busy ? "Submitting" : "Submit Intent"}
@@ -341,12 +377,13 @@ export function DashboardClient() {
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
                 {result.intents.map((intent, index) => (
-                  <div key={`${intent.to}-${index}`} className="border border-circuit-line bg-black/20 p-3">
+                  <div key={`${intent.to}-${index}`} className="group relative overflow-hidden border border-circuit-line bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.72))] p-3 transition hover:border-circuit-cyan/60 hover:shadow-neon">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-circuit-cyan/0 via-circuit-cyan/50 to-circuit-cyan/0 opacity-0 transition group-hover:opacity-100" />
                     <div className="text-xs uppercase tracking-[0.16em] text-slate-500">Intent {index + 1}</div>
-                    <div className="mt-2 text-lg font-semibold text-white">
+                    <div className="mt-2 text-xl font-semibold text-white">
                       {intent.amount} {intent.token}
                     </div>
-                    <div className="mt-2 truncate text-xs text-slate-400">{intent.to}</div>
+                    <div className="mt-2 truncate font-mono text-xs text-slate-400">{intent.to}</div>
                   </div>
                 ))}
               </div>
@@ -355,7 +392,8 @@ export function DashboardClient() {
 
           <Panel title="Live Execution Tracker" icon={RadioTower}>
             <div className="flex flex-col gap-4">
-              <div className="grid gap-3">
+              <div className="relative grid gap-3">
+                <div className="pointer-events-none absolute bottom-6 left-[22px] top-6 w-px bg-gradient-to-b from-circuit-cyan/20 via-circuit-green/30 to-circuit-violet/20" />
                 {tracker.map((item) => (
                   <TrackerRow
                     key={item.id}
@@ -366,15 +404,15 @@ export function DashboardClient() {
                   />
                 ))}
               </div>
-              <div className="border border-circuit-line bg-black/30 p-4">
+              <div className="border border-circuit-cyan/20 bg-[linear-gradient(145deg,rgba(45,226,230,0.07),rgba(2,6,23,0.72))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs uppercase tracking-[0.16em] text-slate-500">Receipt</span>
-                  <span className={result.source === "backend" ? "text-circuit-green" : "text-circuit-amber"}>
+                  <span className={`border px-2 py-1 text-[10px] uppercase tracking-[0.14em] ${result.source === "backend" ? "border-circuit-green/40 bg-circuit-green/10 text-circuit-green" : "border-circuit-amber/40 bg-circuit-amber/10 text-circuit-amber"}`}>
                     {result.source === "backend" ? "Live RPC" : "Mock fallback"}
                   </span>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-slate-400">{statusText}</p>
-                <div className="mt-3 break-all font-mono text-xs leading-5 text-circuit-cyan">
+                <div className="mt-3 break-all border border-circuit-line bg-black/30 p-3 font-mono text-xs leading-5 text-circuit-cyan">
                   {result.receipt.transactionHash}
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
@@ -401,16 +439,19 @@ export function DashboardClient() {
                 <Stat label="Chain ID" value={localScan.chainId} accent="cyan" />
                 <Stat label="Block" value={localScan.blockNumber} accent="green" />
               </div>
-              <div className="flex flex-col gap-3 border border-circuit-line bg-black/25 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 border border-circuit-cyan/20 bg-[linear-gradient(135deg,rgba(77,124,255,0.1),rgba(2,6,23,0.5))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <div className="text-xs uppercase tracking-[0.16em] text-slate-500">Local RPC</div>
-                  <div className="mt-1 truncate font-mono text-xs text-circuit-cyan">{RPC_URL}</div>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-slate-500">
+                    <RadioTower className="h-3.5 w-3.5 text-circuit-cyan" />
+                    Local RPC
+                  </div>
+                  <div className="mt-2 truncate font-mono text-xs text-circuit-cyan">{RPC_URL}</div>
                   {localScan.error ? <div className="mt-2 text-xs text-circuit-amber">{localScan.error}</div> : null}
                 </div>
                 <button
                   type="button"
                   onClick={() => setScanRefreshNonce((value) => value + 1)}
-                  className="inline-flex h-10 items-center justify-center gap-2 border border-circuit-line px-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-200 transition hover:border-circuit-cyan hover:text-circuit-cyan"
+                  className="inline-flex h-10 items-center justify-center gap-2 border border-circuit-line bg-black/20 px-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-200 transition hover:border-circuit-cyan hover:bg-circuit-cyan/10 hover:text-circuit-cyan"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${localScan.status === "syncing" ? "animate-spin" : ""}`} />
                   Refresh
@@ -418,7 +459,8 @@ export function DashboardClient() {
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
                 {localScan.balances.map((account) => (
-                  <div key={account.address} className="border border-circuit-line bg-black/20 p-3">
+                  <div key={account.address} className="group relative overflow-hidden border border-circuit-line bg-[linear-gradient(145deg,rgba(16,24,39,0.78),rgba(2,6,23,0.68))] p-3 transition hover:border-circuit-green/50 hover:shadow-green">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-circuit-green/50 to-transparent opacity-0 transition group-hover:opacity-100" />
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <div className="text-sm font-semibold text-white">{account.label}</div>
@@ -426,25 +468,30 @@ export function DashboardClient() {
                       </div>
                       <Wallet className="h-4 w-4 text-circuit-green" />
                     </div>
-                    <div className="mt-3 text-xl font-semibold text-circuit-green">{account.balance} USDC</div>
-                    <div className="mt-2 truncate font-mono text-xs text-slate-500">{account.address}</div>
+                    <div className="mt-3 flex items-end justify-between gap-2">
+                      <div className="text-2xl font-semibold text-circuit-green">{account.balance}</div>
+                      <div className="pb-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">USDC</div>
+                    </div>
+                    <div className="mt-2 truncate border-t border-circuit-line/70 pt-2 font-mono text-xs text-slate-500">{account.address}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="min-w-0 border border-circuit-line bg-black/25 p-4">
+            <div className="min-w-0 border border-circuit-line bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.78))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <div className="text-xs uppercase tracking-[0.16em] text-slate-500">Recent Transactions</div>
                   <div className="mt-1 text-sm text-slate-400">Latest Hardhat blocks with mined transactions</div>
                 </div>
-                <Database className="h-4 w-4 text-circuit-cyan" />
+                <div className="flex h-9 w-9 items-center justify-center border border-circuit-cyan/40 bg-circuit-cyan/10 text-circuit-cyan shadow-neon">
+                  <Database className="h-4 w-4" />
+                </div>
               </div>
               <div className="grid gap-2">
                 {localScan.transactions.length > 0 ? (
                   localScan.transactions.map((transaction) => (
-                    <div key={transaction.hash} className="grid gap-2 border border-circuit-line bg-black/20 p-3 text-xs lg:grid-cols-[90px_1fr_90px] lg:items-center">
+                    <div key={transaction.hash} className="grid gap-3 border border-circuit-line bg-black/25 p-3 text-xs transition hover:border-circuit-cyan/50 hover:bg-circuit-cyan/5 lg:grid-cols-[90px_1fr_110px] lg:items-center">
                       <div>
                         <div className="uppercase tracking-[0.14em] text-slate-500">Block</div>
                         <div className="mt-1 font-semibold text-circuit-cyan">{transaction.blockNumber}</div>
@@ -456,15 +503,15 @@ export function DashboardClient() {
                         </div>
                       </div>
                       <div className="lg:text-right">
-                        <div className={transaction.status === "success" ? "text-circuit-green" : "text-circuit-amber"}>
+                        <div className={`inline-flex border px-2 py-1 text-[10px] uppercase tracking-[0.12em] ${transaction.status === "success" ? "border-circuit-green/40 bg-circuit-green/10 text-circuit-green" : "border-circuit-amber/40 bg-circuit-amber/10 text-circuit-amber"}`}>
                           {transaction.status}
                         </div>
-                        <div className="mt-1 text-slate-500">{transaction.gasUsed} gas</div>
+                        <div className="mt-2 font-mono text-slate-500">{transaction.gasUsed} gas</div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="border border-circuit-line bg-black/20 p-4 text-sm text-slate-500">
+                  <div className="border border-dashed border-circuit-line bg-black/20 p-5 text-sm text-slate-500">
                     No mined transactions found in the latest local blocks yet.
                   </div>
                 )}
@@ -473,35 +520,122 @@ export function DashboardClient() {
           </div>
         </Panel>
 
-        <Panel title="Scalability & Performance Metrics" icon={Gauge}>
-          <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
-            <div className="h-72 min-w-0">
+        <Panel title="Scalability & Performance Metrics" icon={Gauge} featured>
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="relative min-w-0 overflow-hidden border border-circuit-cyan/25 bg-[linear-gradient(145deg,rgba(16,24,39,0.96),rgba(2,6,23,0.88))] p-4 shadow-data">
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(45,226,230,0.14),transparent_36%),linear-gradient(235deg,rgba(168,85,247,0.16),transparent_34%)]" />
+              <div className="relative mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="inline-flex items-center gap-2 border border-circuit-violet/40 bg-circuit-violet/10 px-3 py-1 text-xs uppercase tracking-[0.16em] text-circuit-violet">
+                    <Gauge className="h-3.5 w-3.5" />
+                    Recharts Gas Analytics
+                  </div>
+                  <div className="mt-3 text-2xl font-semibold text-white sm:text-3xl">Save {gasSavedLabel} Gas</div>
+                  <div className="mt-2 text-sm leading-6 text-slate-400">
+                    Sequential execution baseline is compared against the Nexus-X batched settlement receipt.
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:min-w-64">
+                  <div className="border border-circuit-rose/35 bg-circuit-rose/10 px-3 py-2">
+                    <div className="text-[10px] uppercase tracking-[0.16em] text-circuit-rose">Baseline</div>
+                    <div className="mt-1 font-mono text-lg font-semibold text-white">{sequentialGas.toLocaleString()}</div>
+                  </div>
+                  <div className="border border-circuit-green/40 bg-circuit-green/10 px-3 py-2">
+                    <div className="text-[10px] uppercase tracking-[0.16em] text-circuit-green">Saved</div>
+                    <div className="mt-1 font-mono text-lg font-semibold text-circuit-green">{gasSavedAbsolute.toLocaleString()}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="relative h-[360px] border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                <div className="pointer-events-none absolute inset-x-4 top-4 z-10 flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                  <span>Gas Used</span>
+                  <span>Lower is better</span>
+                </div>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 12, right: 16, bottom: 8, left: 8 }}>
-                  <CartesianGrid stroke="rgba(148, 163, 184, 0.14)" vertical={false} />
-                  <XAxis dataKey="mode" stroke="#94A3B8" tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94A3B8" tickLine={false} axisLine={false} width={72} />
-                  <Tooltip
-                    cursor={{ fill: "rgba(45, 226, 230, 0.06)" }}
-                    contentStyle={{
-                      background: "#0D121C",
-                      border: "1px solid #243041",
-                      borderRadius: 0,
-                      color: "#EEF7FF"
-                    }}
+                <BarChart data={chartData} margin={{ top: 48, right: 18, bottom: 8, left: 0 }}>
+                  <defs>
+                    <linearGradient id="sequentialGasGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FF7AAF" />
+                      <stop offset="48%" stopColor="#FF4D8D" />
+                      <stop offset="100%" stopColor="#5B183C" />
+                    </linearGradient>
+                    <linearGradient id="batchedGasGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#B7FFCF" />
+                      <stop offset="45%" stopColor="#72F2A1" />
+                      <stop offset="100%" stopColor="#1B6B73" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke={chartGridColor} vertical={false} strokeDasharray="3 10" />
+                  <XAxis
+                    dataKey="mode"
+                    stroke="#9FB3D9"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 12, fontWeight: 700 }}
                   />
-                  <Bar dataKey="gas" radius={[2, 2, 0, 0]}>
+                  <YAxis
+                    domain={[0, Math.ceil(maxChartGas * 1.18)]}
+                    stroke="#7185AA"
+                    tickLine={false}
+                    axisLine={false}
+                    width={78}
+                    tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(45, 226, 230, 0.05)" }}
+                    content={<GasTooltip />}
+                  />
+                  <Bar dataKey="gas" barSize={118} radius={[8, 8, 1, 1]}>
+                    <LabelList dataKey="label" position="top" fill="#EEF7FF" fontSize={12} fontWeight={700} />
                     {chartData.map((entry) => (
                       <Cell key={entry.mode} fill={entry.fill} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+              </div>
+              <div className="relative mt-4 grid gap-3 sm:grid-cols-2">
+                <GasLegend label="Direct sequential" value={sequentialGas} tone="rose" />
+                <GasLegend label="Batched settlement" value={batchedGas} tone="green" />
+              </div>
+              <div className="relative mt-4 border border-circuit-line/80 bg-black/30 p-3">
+                <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                  <span>Gas compression path</span>
+                  <span>{savedShare.toFixed(2)}% saved</span>
+                </div>
+                <div className="flex h-3 overflow-hidden border border-circuit-line bg-slate-950">
+                  <div className="bg-gradient-to-r from-circuit-green to-circuit-cyan" style={{ width: `${savedShare}%` }} />
+                  <div className="bg-gradient-to-r from-circuit-violet/80 to-circuit-rose/90" style={{ width: `${batchedShare}%` }} />
+                </div>
+                <div className="mt-2 flex items-center justify-between font-mono text-[11px] text-slate-400">
+                  <span>Saved {gasSavedAbsolute.toLocaleString()}</span>
+                  <span>Used {batchedGas.toLocaleString()}</span>
+                </div>
+              </div>
             </div>
             <div className="grid gap-3">
-              <Metric icon={Zap} label="Gas Saved" value={gasSavedLabel} tone="green" />
+              <div className="relative overflow-hidden border border-circuit-green/50 bg-[linear-gradient(145deg,rgba(114,242,161,0.16),rgba(45,226,230,0.06))] p-5 shadow-green">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-circuit-green to-transparent" />
+                <div className="relative flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-circuit-green">
+                  <Zap className="h-4 w-4" />
+                  Gas Saved
+                </div>
+                <div className="relative mt-4 text-6xl font-semibold leading-none text-white">{gasSavedLabel}</div>
+                <div className="relative mt-3 text-sm leading-6 text-slate-400">
+                  Nexus-X avoids {gasSavedAbsolute.toLocaleString()} gas across this workload by settling intents in compact batches.
+                </div>
+                <div className="relative mt-5 h-2 border border-circuit-line bg-black/50">
+                  <div
+                    className="h-full bg-gradient-to-r from-circuit-green to-circuit-cyan"
+                    style={{ width: `${savedShare}%` }}
+                    aria-label={`${gasSavedLabel} gas saved`}
+                  />
+                </div>
+              </div>
               <Metric icon={Activity} label="Sequential Gas" value={sequentialGas.toLocaleString()} tone="rose" />
               <Metric icon={CheckCircle2} label="Batched Gas" value={batchedGas.toLocaleString()} tone="cyan" />
+              <Metric icon={Blocks} label="Batched Share" value={`${batchedShare.toFixed(1)}%`} tone="green" />
             </div>
           </div>
           <div className="mt-4 grid gap-3 border-t border-circuit-line/70 pt-4 text-xs text-slate-500 sm:grid-cols-3">
@@ -516,7 +650,7 @@ export function DashboardClient() {
             </span>
           </div>
         </Panel>
-        <footer className="flex flex-col gap-2 border-t border-circuit-line/80 pt-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <footer className="flex flex-col gap-2 border-t border-circuit-line/80 bg-black/10 px-1 pt-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <span>Agent: {AGENT_URL}</span>
           <span>Bundler: {BUNDLER_URL}</span>
           <span>
@@ -712,26 +846,61 @@ function pause(ms: number) {
   });
 }
 
+function EndpointPill({ label, value, tone }: { label: string; value: string; tone: "cyan" | "violet" | "green" }) {
+  const styles = {
+    cyan: "border-circuit-cyan/35 bg-circuit-cyan/10 text-circuit-cyan",
+    violet: "border-circuit-violet/35 bg-circuit-violet/10 text-circuit-violet",
+    green: "border-circuit-green/35 bg-circuit-green/10 text-circuit-green"
+  }[tone];
+
+  return (
+    <div className={`inline-flex max-w-full items-center gap-2 border px-3 py-1 ${styles}`}>
+      <span className="text-[10px] uppercase tracking-[0.14em] text-slate-400">{label}</span>
+      <span className="max-w-[220px] truncate font-mono text-[11px]">{value}</span>
+    </div>
+  );
+}
+
+function StatusDot({ status, label }: { status: "active" | "ready"; label: string }) {
+  const color = status === "active" ? "bg-circuit-amber shadow-[0_0_12px_rgba(246,196,83,0.55)]" : "bg-circuit-green shadow-[0_0_12px_rgba(114,242,161,0.55)]";
+
+  return (
+    <span className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-slate-400">
+      <span className={`h-2 w-2 ${color}`} />
+      {label}
+    </span>
+  );
+}
+
 function Panel({
   id,
   title,
   icon: Icon,
-  children
+  children,
+  featured = false
 }: {
   id?: string;
   title: string;
   icon: ComponentType<{ className?: string }>;
   children: ReactNode;
+  featured?: boolean;
 }) {
   return (
-    <section id={id} className="scroll-mt-4 border border-circuit-line bg-circuit-panel/95 p-4 shadow-neon sm:p-5">
-      <div className="mb-4 flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center border border-circuit-cyan/50 bg-black/30 text-circuit-cyan">
+    <section
+      id={id}
+      className={`relative scroll-mt-4 overflow-hidden border bg-[linear-gradient(145deg,rgba(13,18,28,0.96),rgba(2,6,23,0.9))] p-4 shadow-neon backdrop-blur sm:p-5 ${
+        featured ? "border-circuit-cyan/50" : "border-circuit-line"
+      }`}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.035),transparent_28%),linear-gradient(250deg,rgba(77,124,255,0.045),transparent_34%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-circuit-cyan/70 to-transparent" />
+      <div className="relative mb-4 flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center border border-circuit-cyan/50 bg-circuit-cyan/10 text-circuit-cyan shadow-neon">
           <Icon className="h-4 w-4" />
         </div>
         <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-200">{title}</h2>
       </div>
-      {children}
+      <div className="relative">{children}</div>
     </section>
   );
 }
@@ -744,7 +913,8 @@ function Stat({ label, value, accent }: { label: string; value: string; accent: 
   }[accent];
 
   return (
-    <div className="border border-circuit-line bg-black/25 px-3 py-2">
+    <div className="relative overflow-hidden border border-circuit-line bg-[linear-gradient(145deg,rgba(15,23,42,0.68),rgba(2,6,23,0.68))] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       <div className="text-[10px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
       <div className={`mt-1 text-base font-semibold ${color}`}>{value}</div>
     </div>
@@ -764,15 +934,17 @@ function TrackerRow({
 }) {
   const styles = {
     idle: "border-circuit-line text-slate-500",
-    active: "border-circuit-cyan text-circuit-cyan shadow-neon",
-    complete: "border-circuit-green text-circuit-green shadow-green",
-    failed: "border-circuit-amber text-circuit-amber"
+    active: "border-circuit-cyan bg-circuit-cyan/10 text-circuit-cyan shadow-neon",
+    complete: "border-circuit-green/60 bg-circuit-green/10 text-circuit-green shadow-green",
+    failed: "border-circuit-amber bg-circuit-amber/10 text-circuit-amber"
   }[state];
 
   return (
-    <div className={`flex items-center justify-between border bg-black/25 p-3 ${styles}`}>
+    <div className={`relative flex items-center justify-between border bg-black/35 p-3 transition ${styles}`}>
       <div className="flex items-center gap-3">
-        <Icon className="h-4 w-4" />
+        <div className="z-10 flex h-7 w-7 items-center justify-center border border-current bg-slate-950">
+          <Icon className="h-4 w-4" />
+        </div>
         <div>
           <div className="text-sm font-medium text-slate-100">{label}</div>
           <div className="mt-1 text-xs text-slate-500">{caption}</div>
@@ -801,12 +973,43 @@ function Metric({
   }[tone];
 
   return (
-    <div className="border border-circuit-line bg-black/25 p-4">
+    <div className="border border-circuit-line bg-black/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
       <div className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-slate-500">
         <Icon className={`h-4 w-4 ${color}`} />
         {label}
       </div>
       <div className={`mt-3 text-2xl font-semibold ${color}`}>{value}</div>
+    </div>
+  );
+}
+
+function GasTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value?: number }>; label?: string }) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const gas = Number(payload[0]?.value ?? 0);
+
+  return (
+    <div className="border border-circuit-cyan/40 bg-[#08101A]/95 px-4 py-3 shadow-neon">
+      <div className="text-xs uppercase tracking-[0.16em] text-circuit-cyan">{label}</div>
+      <div className="mt-2 text-xl font-semibold text-white">{gas.toLocaleString()}</div>
+      <div className="mt-1 text-xs text-slate-500">gas used</div>
+    </div>
+  );
+}
+
+function GasLegend({ label, value, tone }: { label: string; value: number; tone: "rose" | "green" }) {
+  const color = tone === "rose" ? "bg-circuit-rose" : "bg-circuit-green";
+  const text = tone === "rose" ? "text-circuit-rose" : "text-circuit-green";
+
+  return (
+    <div className="flex items-center justify-between gap-3 border border-circuit-line bg-black/20 px-3 py-2">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className={`h-2.5 w-2.5 ${color}`} />
+        <span className="truncate text-xs uppercase tracking-[0.12em] text-slate-500">{label}</span>
+      </div>
+      <span className={`shrink-0 font-mono text-xs ${text}`}>{value.toLocaleString()}</span>
     </div>
   );
 }

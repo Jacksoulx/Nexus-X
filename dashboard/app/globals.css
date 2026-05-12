@@ -18,11 +18,24 @@ body {
 body {
   margin: 0;
   background:
+    linear-gradient(135deg, rgba(168, 85, 247, 0.16), transparent 34%),
+    linear-gradient(220deg, rgba(45, 226, 230, 0.14), transparent 38%),
+    linear-gradient(0deg, rgba(114, 242, 161, 0.08), transparent 45%),
     linear-gradient(rgba(45, 226, 230, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(45, 226, 230, 0.04) 1px, transparent 1px),
     #070a0f;
   background-size: 44px 44px;
   color: #eef7ff;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 44%, rgba(77, 124, 255, 0.08) 44% 45%, transparent 45%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.34), transparent 22%, transparent 78%, rgba(0, 0, 0, 0.34));
 }
 
 button,
